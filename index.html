@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Timer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f5f5f5;
+    }
+    
+    .app-container {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+    
+    .main-heading {
+      color: #222222;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+    
+    .mode-tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    
+    .mode-tab {
+      padding: 10px 15px;
+      margin: 0 5px;
+      background-color: #f0f0f0;
+      border: none;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #555;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .mode-tab-short{
+        background-color: lightblue;
+    }
+    .mode-tab-short{
+        background-color: violet;
+    }
+    
+    .mode-tab:hover {
+      background-color: #e0e0e0;
+    }
+    
+    .mode-tab.active {
+      background-color: #4d4dff;
+      color: white;
+    }
+    
+    .timer-display {
+      font-size: 5rem;
+      font-weight: bold;
+      margin: 30px 0;
+      color: #333;
+    }
+    
+    .control-buttons {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .control-button {
+      padding: 12px 25px;
+      margin: 0 8px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .start-button {
+      background-color: #4caf50;
+      color: white;
+    }
+    
+    .start-button:hover {
+      background-color: #388e3c;
+    }
+    
+    .pause-button {
+      background-color: #ff9800;
+      color: white;
+    }
+    
+    .pause-button:hover {
+      background-color: #f57c00;
+    }
+    
+    .reset-button {
+      background-color: #f44336;
+      color: white;
+    }
+    
+    .reset-button:hover {
+      background-color: #d32f2f;
+    }
+    
+    @media (max-width: 600px) {
+      .app-container {
+        padding: 20px;
+        width: 95%;
+      }
+      
+      .main-heading {
+        font-size: 2rem;
+      }
+      
+      .timer-display {
+        font-size: 4rem;
+      }
+      
+      .control-buttons {
+        flex-wrap: wrap;
+      }
+      
+      .control-button {
+        margin: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1 class="main-heading">Pomodoro Timer</h1>
+    
+    <div class="timer-display" id="timer">25:00</div>
+    
+    <div class="control-buttons">
+      <button class="control-button start-button" id="startBtn">Start</button>
+      <button class="control-button pause-button" id="pauseBtn" disabled>Pause</button>
+      <button class="control-button reset-button" id="resetBtn">Reset</button>
+    </div>
+    <div class="mode-tabs">
+        <button class="mode-tab" data-mode="shortBreak" data-time="300">SHORT BREAK</button>
+        <button class="mode-tab" data-mode="longBreak" data-time="900">LONG BREAK</button>
+      </div>
+  </div>
+  
+  <audio id="alarmSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const timerDisplay = document.getElementById('timer');
+      const startButton = document.getElementById('startBtn');
+      const pauseButton = document.getElementById('pauseBtn');
+      const resetButton = document.getElementById('resetBtn');
+      const modeTabs = document.querySelectorAll('.mode-tab');
+      const alarmSound = document.getElementById('alarmSound');
+      
+      let timerInterval;
+      let timeLeft = 1500; 
+      let isRunning = false;
+      let currentMode = 'pomodoro';
+      
+      const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        return `${mins}:${secs}`;
+      };
+      
+      const updateDisplay = () => {
+        timerDisplay.textContent = formatTime(timeLeft);
+      };
+      
+      const startTimer = () => {
+        if (!isRunning) {
+          isRunning = true;
+          startButton.disabled = true;
+          pauseButton.disabled = false;
+          
+          timerInterval = setInterval(() => {
+            if (timeLeft > 0) {
+              timeLeft--;
+              updateDisplay();
+            } else {
+              clearInterval(timerInterval);
+              isRunning = false;
+              startButton.disabled = false;
+              pauseButton.disabled = true;
+              alarmSound.play();
+              alert(`${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} time is up!`);
+            }
+          }, 1000);
+        }
+      };
+      
+      const pauseTimer = () => {
+        if (isRunning) {
+          clearInterval(timerInterval);
+          isRunning = false;
+          startButton.disabled = false;
+          pauseButton.disabled = true;
+        }
+      };
+      
+      const resetTimer = () => {
+        clearInterval(timerInterval);
+        isRunning = false;
+        
+        const activeTab = document.querySelector('.mode-tab.active');
+        timeLeft = parseInt(activeTab.dataset.time);
+        
+        updateDisplay();
+        startButton.disabled = false;
+        pauseButton.disabled = true;
+      };
+      
+      const switchMode = (mode, time) => {
+        currentMode = mode;
+        
+        clearInterval(timerInterval);
+        isRunning = false;
+        
+        modeTabs.forEach(tab => {
+          tab.classList.remove('active');
+          if (tab.dataset.mode === mode) {
+            tab.classList.add('active');
+          }
+        });
+        
+        timeLeft = time;
+        updateDisplay();
+        
+        startButton.disabled = false;
+        pauseButton.disabled = true;
+      };
+      
+      startButton.addEventListener('click', startTimer);
+      pauseButton.addEventListener('click', pauseTimer);
+      resetButton.addEventListener('click', resetTimer);
+      
+      modeTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const mode = tab.dataset.mode;
+          const time = parseInt(tab.dataset.time);
+          switchMode(mode, time);
+        });
+      });
+      
+      updateDisplay();
+    });
+  </script>
+</body>
+</html>
